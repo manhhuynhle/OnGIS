@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc Nghiệm GIS & WebGIS - Nhóm 1</title>
+    <!-- Tải Tailwind CSS qua CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tải Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            300: '#93c5fd',
+                            400: '#60a5fa',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased selection:bg-brand-100 selection:text-brand-900">
+
+    <!-- Thanh điều hướng trên cùng (Sticky Header) -->
+    <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between py-3 gap-3">
+                <!-- Tiêu đề & Logo -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                            <!-- Icon Bản đồ / Địa lý SVG -->
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-lg sm:text-xl font-bold text-slate-900 leading-tight">Đề Thi Trắc Nghiệm GIS & WebGIS</h1>
+                            <p class="text-xs sm:text-sm text-slate-500 font-medium">Nhóm 1 • Tổng số: 30 câu hỏi</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chuyển đổi chế độ & Nút tải file -->
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <!-- Bộ chuyển chế độ làm bài -->
+                    <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200" role="group">
+                        <button id="mode-exam" type="button" onclick="setMode('exam')" 
+                            class="px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 bg-white text-brand-700 shadow-sm">
+                            Làm bài thi
+                        </button>
+                        <button id="mode-practice" type="button" onclick="setMode('practice')" 
+                            class="px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900">
+                            Luyện tập tức thì
+                        </button>
+                    </div>
+
+                    <!-- Nút tải mã nguồn HTML -->
+                    <button type="button" onclick="downloadHTML()" title="Lưu trang web này về máy để sử dụng offline"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 rounded-xl transition-all duration-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        <span>Tải mã nguồn HTML</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Thanh tiến độ (Progress Bar) -->
+            <div class="pb-3">
+                <div class="flex items-center justify-between text-xs font-semibold mb-1.5">
+                    <span class="text-slate-600">Tiến độ hoàn thành: <span id="progress-text" class="text-brand-700 font-bold">0 / 30 câu</span></span>
+                    <span id="progress-percent" class="text-brand-600">0%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div id="progress-bar" class="bg-gradient-to-r from-brand-500 to-brand-700 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Nội dung chính -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        
+        <!-- Khu vực hiển thị Kết quả tổng quan (Ẩn mặc định, hiện khi bấm Nộp bài) -->
+        <section id="result-banner" class="hidden mb-8 bg-white rounded-2xl border border-brand-200 shadow-lg shadow-brand-900/5 overflow-hidden">
+            <div class="bg-gradient-to-r from-brand-700 via-brand-600 to-blue-600 px-6 py-4 text-white flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <svg class="w-6 h-6 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                    </svg>
+                    <h2 class="text-lg sm:text-xl font-bold">Kết Quả Chấm Điểm Tự Động</h2>
+                </div>
+                <span id="result-grade-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-white/20 backdrop-blur-sm">Hoàn thành</span>
+            </div>
+            <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                <!-- Điểm hệ 10 -->
+                <div class="bg-brand-50 rounded-xl p-4 border border-brand-100 text-center">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-brand-600 mb-1">Điểm số (Thang 10)</p>
+                    <p id="score-ten" class="text-3xl sm:text-4xl font-extrabold text-brand-800">0.00</p>
+                </div>
+                <!-- Số câu đúng -->
+                <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-100 text-center">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-1">Số câu trả lời đúng</p>
+                    <p id="score-count" class="text-3xl sm:text-4xl font-extrabold text-emerald-700">0 / 30</p>
+                </div>
+                <!-- Nhận xét & Hành động -->
+                <div class="flex flex-col justify-center items-center sm:items-start gap-3">
+                    <p id="result-feedback" class="text-sm text-slate-600 font-medium text-center sm:text-left">
+                        Hãy xem lại các câu được tô màu xanh lá (đáp án đúng) và đỏ (đáp án chọn sai) bên dưới.
+                    </p>
+                    <button type="button" onclick="resetQuiz()" 
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span>Làm lại bài thi</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bố cục 2 cột: Danh sách câu hỏi bên trái, Bảng điều hướng bên phải -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+            
+            <!-- Cột chính: Danh sách 30 câu hỏi -->
+            <div id="questions-container" class="lg:col-span-8 space-y-5">
+                <!-- Các thẻ câu hỏi sẽ được render tự động bằng JavaScript -->
+            </div>
+
+            <!-- Cột phụ: Bảng điều hướng nhanh & Nút điều khiển -->
+            <aside class="lg:col-span-4 lg:sticky lg:top-28 space-y-5">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                            <svg class="w-5 h-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                            </svg>
+                            <span>Bảng điều hướng câu hỏi</span>
+                        </h3>
+                        <span id="mode-indicator" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 border border-brand-100">
+                            Chế độ: Thi
+                        </span>
+                    </div>
+
+                    <!-- Chú thích màu sắc -->
+                    <div class="flex flex-wrap gap-3 text-xs text-slate-600 mb-4 pb-3 border-b border-slate-100">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-sm bg-slate-100 border border-slate-300 inline-block"></span>
+                            <span>Chưa làm</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-sm bg-brand-600 inline-block"></span>
+                            <span>Đã chọn</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-sm bg-emerald-500 inline-block"></span>
+                            <span>Đúng</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-sm bg-rose-500 inline-block"></span>
+                            <span>Sai</span>
+                        </div>
+                    </div>
+
+                    <!-- Lưới 30 nút số thứ tự câu hỏi -->
+                    <div id="nav-grid" class="grid grid-cols-6 sm:grid-cols-10 lg:grid-cols-6 gap-2 mb-6">
+                        <!-- Các nút điều hướng được tạo bởi JavaScript -->
+                    </div>
+
+                    <!-- Các nút thao tác chính -->
+                    <div class="space-y-3">
+                        <button id="btn-submit" type="button" onclick="handleSubmitClick()"
+                            class="w-full py-3 px-4 bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 text-white font-bold rounded-xl shadow-md shadow-brand-600/20 transition-all duration-200 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>Chấm điểm / Nộp bài</span>
+                        </button>
+
+                        <button type="button" onclick="resetQuiz()"
+                            class="w-full py-2.5 px-4 bg-white hover:bg-slate-100 text-slate-700 font-semibold border border-slate-300 rounded-xl transition-all duration-200 flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <span>Làm lại bài</span>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Hộp thoại xác nhận tùy chỉnh (Thay thế confirm() để đảm bảo tính thẩm mỹ và không bị chặn) -->
+    <div id="custom-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform transition-all">
+            <div class="flex items-center gap-3 text-amber-600 mb-3">
+                <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900">Xác nhận nộp bài</h3>
+            </div>
+            <p id="modal-message" class="text-sm text-slate-600 mb-6 leading-relaxed">
+                Bạn vẫn còn một số câu hỏi chưa chọn đáp án. Bạn có chắc chắn muốn nộp bài và chấm điểm ngay bây giờ không?
+            </p>
+            <div class="flex items-center justify-end gap-3">
+                <button type="button" onclick="closeModal()" 
+                    class="px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+                    Tiếp tục làm bài
+                </button>
+                <button type="button" onclick="confirmSubmit()" 
+                    class="px-4 py-2 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-sm transition-colors">
+                    Vẫn nộp bài
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thông báo Toast (Thay thế alert()) -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 text-sm font-medium">
+            <svg class="w-5 h-5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span id="toast-message">Đã tải tệp HTML thành công!</span>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-12 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs sm:text-sm text-slate-500">
+            <p class="font-medium text-slate-700">Bộ đề trắc nghiệm môn Hệ thống Thông tin Địa lý (GIS & WebGIS) - Nhóm 1</p>
+            <p class="mt-1">Hỗ trợ tự động chấm điểm và luyện tập trực tuyến.</p>
+        </div>
+    </footer>
+
+    <!-- Mã nguồn JavaScript xử lý dữ liệu và logic -->
+    <script>
+        // Dữ liệu đầy đủ 30 câu hỏi và đáp án chính xác từ file 'Nhóm 1-quiz.docx'
+        const quizData = [
+            {
+                id: 1,
+                question: "Ảnh viễn thám được sử dụng trong bước nào của quy trình GIS?",
+                options: {
+                    A: "Truy vấn dữ liệu",
+                    B: "Lưu trữ dữ liệu",
+                    C: "Phân tích dữ liệu",
+                    D: "Nhập dữ liệu"
+                },
+                answer: "D"
+            },
+            {
+                id: 2,
+                question: "Lợi ích của WebGIS là?",
+                options: {
+                    A: "Cần cài đặt nhiều phần mềm",
+                    B: "Chạy chậm hơn",
+                    C: "Tiếp cận toàn cầu và chi phí thấp",
+                    D: "Phức tạp hơn"
+                },
+                answer: "C"
+            },
+            {
+                id: 3,
+                question: "Ảnh viễn thám được sử dụng trong bước nào của quy trình GIS?",
+                options: {
+                    A: "Lưu trữ dữ liệu",
+                    B: "Truy vấn dữ liệu",
+                    C: "Nhập dữ liệu",
+                    D: "Phân tích dữ liệu"
+                },
+                answer: "C"
+            },
+            {
+                id: 4,
+                question: "Trong mô hình vector, vùng được xác định bởi?",
+                options: {
+                    A: "Một chuỗi điểm khép kín",
+                    B: "Một ô lưới",
+                    C: "Một ma trận",
+                    D: "Một tập điểm ngẫu nhiên"
+                },
+                answer: "A"
+            },
+            {
+                id: 5,
+                question: "GIS gồm mấy thành phần cơ bản?",
+                options: {
+                    A: "6",
+                    B: "3",
+                    C: "4",
+                    D: "5"
+                },
+                answer: "D"
+            },
+            {
+                id: 6,
+                question: "Lợi ích của WebGIS là?",
+                options: {
+                    A: "Chạy chậm hơn",
+                    B: "Phức tạp hơn",
+                    C: "Tiếp cận toàn cầu và chi phí thấp",
+                    D: "Cần cài đặt nhiều phần mềm"
+                },
+                answer: "C"
+            },
+            {
+                id: 7,
+                question: "GIS có thể được ứng dụng trong lĩnh vực nào sau đây?",
+                options: {
+                    A: "Nông nghiệp",
+                    B: "Thể thao",
+                    C: "Thời trang",
+                    D: "Âm nhạc"
+                },
+                answer: "A"
+            },
+            {
+                id: 8,
+                question: "Mô hình raster được tổ chức dưới dạng gì?",
+                options: {
+                    A: "Đường cong",
+                    B: "Tập điểm tọa độ",
+                    C: "Bảng thuộc tính",
+                    D: "Lưới ô vuông"
+                },
+                answer: "D"
+            },
+            {
+                id: 9,
+                question: "Buffer (vùng đệm) được sử dụng để?",
+                options: {
+                    A: "Hiển thị ảnh",
+                    B: "Nén dữ liệu",
+                    C: "Xác định vùng ảnh hưởng quanh một đối tượng",
+                    D: "Đo tỷ lệ bản đồ"
+                },
+                answer: "C"
+            },
+            {
+                id: 10,
+                question: "Phép chiếu nào sau đây bảo toàn hình dạng?",
+                options: {
+                    A: "Phép chiếu trụ",
+                    B: "Phép chiếu mặt phẳng",
+                    C: "Phép chiếu nón",
+                    D: "Cả ba loại phép chiếu"
+                },
+                answer: "A"
+            },
+            {
+                id: 11,
+                question: "Mô hình raster được tổ chức dưới dạng gì?",
+                options: {
+                    A: "Đường cong",
+                    B: "Bảng thuộc tính",
+                    C: "Tập điểm tọa độ",
+                    D: "Lưới ô vuông"
+                },
+                answer: "D"
+            },
+            {
+                id: 12,
+                question: "Quốc gia cho ra đời và sử dụng hệ thống GIS đầu tiên trên thế giới?",
+                options: {
+                    A: "Canada",
+                    B: "Mỹ",
+                    C: "Pháp",
+                    D: "Anh"
+                },
+                answer: "A"
+            },
+            {
+                id: 13,
+                question: "Các chức năng chính của GIS bao gồm:",
+                options: {
+                    A: "Nhập dữ liệu, quản lý dữ liệu, phân tích dữ liệu, hiển thị dữ liệu",
+                    B: "Chỉ hiển thị bản đồ",
+                    C: "Chỉ vẽ bản đồ",
+                    D: "Chỉ lưu trữ dữ liệu"
+                },
+                answer: "A"
+            },
+            {
+                id: 14,
+                question: "GIS gồm mấy thành phần cơ bản?",
+                options: {
+                    A: "4",
+                    B: "5",
+                    C: "6",
+                    D: "3"
+                },
+                answer: "B"
+            },
+            {
+                id: 15,
+                question: "“Tất cả các đường có được khi nối các điểm bằng các đoạn thẳng” là dựa theo mô hình biểu diễn nào?",
+                options: {
+                    A: "Raster",
+                    B: "Số hóa",
+                    C: "Vector",
+                    D: "Trường"
+                },
+                answer: "C"
+            },
+            {
+                id: 16,
+                question: "WebGIS là gì?",
+                options: {
+                    A: "Hệ thống bản đồ giấy",
+                    B: "Phần mềm vẽ bản đồ",
+                    C: "Hệ thống GIS hoạt động trên nền web",
+                    D: "CSDL hành chính"
+                },
+                answer: "C"
+            },
+            {
+                id: 17,
+                question: "WebGIS là gì?",
+                options: {
+                    A: "Phần mềm vẽ bản đồ",
+                    B: "Hệ thống bản đồ giấy",
+                    C: "CSDL hành chính",
+                    D: "Hệ thống GIS hoạt động trên nền web"
+                },
+                answer: "D"
+            },
+            {
+                id: 18,
+                question: "Ứng dụng thực tế của WebGIS?",
+                options: {
+                    A: "Chỉ dùng cho nghiên cứu thiên văn",
+                    B: "Không dùng thực tế",
+                    C: "Bản đồ giao thông, du lịch, quy hoạch đô thị",
+                    D: "Ứng dụng nghe nhạc"
+                },
+                answer: "C"
+            },
+            {
+                id: 19,
+                question: "Một mạng lưới các đường dây dẫn điện có thể được biểu diễn dưới dạng hình học vector nào dưới đây?",
+                options: {
+                    A: "Đa điểm / Multipoint",
+                    B: "Đa giác / Polygon",
+                    C: "Điểm / Point",
+                    D: "Đa đường / Polyline"
+                },
+                answer: "D"
+            },
+            {
+                id: 20,
+                question: "Lợi ích của WebGIS là?",
+                options: {
+                    A: "Chạy chậm hơn",
+                    B: "Tiếp cận toàn cầu và chi phí thấp",
+                    C: "Cần cài đặt nhiều phần mềm",
+                    D: "Phức tạp hơn"
+                },
+                answer: "B"
+            },
+            {
+                id: 21,
+                question: "Mô hình dữ liệu không gian gồm hai loại chính nào?",
+                options: {
+                    A: "Raster và Vector",
+                    B: "Point và Polygon",
+                    C: "Topological và Network",
+                    D: "Image và Table"
+                },
+                answer: "A"
+            },
+            {
+                id: 22,
+                question: "Buffer (vùng đệm) được sử dụng để?",
+                options: {
+                    A: "Nén dữ liệu",
+                    B: "Xác định vùng ảnh hưởng quanh một đối tượng",
+                    C: "Hiển thị ảnh",
+                    D: "Đo tỷ lệ bản đồ"
+                },
+                answer: "B"
+            },
+            {
+                id: 23,
+                question: "Ba dạng hình học đơn giản nhất thường được dùng trong phép chiếu bản đồ là?",
+                options: {
+                    A: "Hình Trụ, Hình Nón, Hình Cầu",
+                    B: "Hình Trụ, Hình Nón, Mặt Phẳng",
+                    C: "Hình Lăng trụ, Hình Cầu, Mặt Phẳng",
+                    D: "Hình Trụ, Mặt Phẳng, Hình Cầu"
+                },
+                answer: "B"
+            },
+            {
+                id: 24,
+                question: "“Tất cả các đường có được khi nối các điểm bằng các đoạn thẳng” là dựa theo mô hình biểu diễn nào?",
+                options: {
+                    A: "Số hóa",
+                    B: "Trường",
+                    C: "Raster",
+                    D: "Vector"
+                },
+                answer: "D"
+            },
+            {
+                id: 25,
+                question: "Một mạng lưới các đường dây dẫn điện có thể được biểu diễn dưới dạng hình học vector nào dưới đây?",
+                options: {
+                    A: "Đa điểm / Multipoint",
+                    B: "Đa giác / Polygon",
+                    C: "Điểm / Point",
+                    D: "Đa đường / Polyline"
+                },
+                answer: "D"
+            },
+            {
+                id: 26,
+                question: "Một mạng lưới các đường dây dẫn điện có thể được biểu diễn dưới dạng hình học vector nào dưới đây?",
+                options: {
+                    A: "Đa đường / Polyline",
+                    B: "Đa giác / Polygon",
+                    C: "Đa điểm / Multipoint",
+                    D: "Điểm / Point"
+                },
+                answer: "A"
+            },
+            {
+                id: 27,
+                question: "“Tất cả các đường có được khi nối các điểm bằng các đoạn thẳng” là dựa theo mô hình biểu diễn nào?",
+                options: {
+                    A: "Raster",
+                    B: "Trường",
+                    C: "Số hóa",
+                    D: "Vector"
+                },
+                answer: "D"
+            },
+            {
+                id: 28,
+                question: "Mô hình vector lưu trữ dữ liệu dưới dạng gì?",
+                options: {
+                    A: "Ảnh xám",
+                    B: "Ô lưới",
+                    C: "Dạng bảng",
+                    D: "Tập hợp điểm, đường, vùng"
+                },
+                answer: "D"
+            },
+            {
+                id: 29,
+                question: "Cặp dữ liệu nào dùng để xác định một đối tượng trong không gian?",
+                options: {
+                    A: "Kinh độ và vĩ độ",
+                    B: "Kích thước và độ phân giải",
+                    C: "Trọng tâm và chu vi",
+                    D: "Chu vi và diện tích"
+                },
+                answer: "A"
+            },
+            {
+                id: 30,
+                question: "Hệ tọa độ quốc gia Việt Nam (VN-2000) lấy gốc tọa độ tại đâu?",
+                options: {
+                    A: "Khuôn viên Thủ đô Hà Nội",
+                    B: "Khuôn viên Thủ đô Hồ chí minh",
+                    C: "Không có gốc tọa độ",
+                    D: "Khuôn viên Viện Nghiên cứu Địa chính, đường Hoàng Quốc Việt, thành phố Hà Nội"
+                },
+                answer: "D"
+            }
+        ];
+
+        // Trạng thái ứng dụng
+        let userAnswers = {};      // Lưu lựa chọn của người dùng: { questionId: 'A' | 'B' | 'C' | 'D' }
+        let currentMode = 'exam';  // 'exam' (Làm bài thi) hoặc 'practice' (Luyện tập tức thì)
+        let isSubmitted = false;   // Trạng thái đã nộp bài hay chưa
+
+        // Khởi tạo giao diện khi tải trang
+        document.addEventListener('DOMContentLoaded', () => {
+            renderQuestions();
+            renderNavGrid();
+            updateProgress();
+        });
+
+        /**
+         * Render toàn bộ 30 câu hỏi ra giao diện chính
+         */
+        function renderQuestions() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+
+            quizData.forEach((item) => {
+                const selectedOpt = userAnswers[item.id];
+                // Xác định xem câu hỏi này có hiển thị kết quả đúng/sai ngay lúc này không
+                const showFeedback = isSubmitted || (currentMode === 'practice' && selectedOpt !== undefined);
+
+                const card = document.createElement('article');
+                card.id = `question-card-${item.id}`;
+                card.className = 'bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 transition-all duration-200 scroll-mt-32';
+
+                // Nhãn trạng thái câu hỏi (nếu đã hiển thị kết quả)
+                let statusBadge = '';
+                if (showFeedback) {
+                    if (selectedOpt === item.answer) {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                            Chính xác
+                        </span>`;
+                    } else if (selectedOpt) {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            Sai (Đáp án: ${item.answer})
+                        </span>`;
+                    } else {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            Chưa chọn (Đáp án: ${item.answer})
+                        </span>`;
+                    }
+                }
+
+                // Tạo HTML cho 4 lựa chọn A, B, C, D
+                let optionsHTML = '';
+                ['A', 'B', 'C', 'D'].forEach((key) => {
+                    const isSelected = selectedOpt === key;
+                    const isCorrect = item.answer === key;
+
+                    // Định dạng style động theo trạng thái
+                    let btnStyle = 'border-slate-200 bg-white hover:border-brand-300 hover:bg-brand-50/40 text-slate-700';
+                    let badgeStyle = 'bg-slate-100 text-slate-700 border-slate-200';
+                    let statusIcon = '';
+
+                    if (showFeedback) {
+                        if (isCorrect) {
+                            // Tô màu xanh lá cho đáp án đúng
+                            btnStyle = 'border-emerald-500 bg-emerald-50/90 text-emerald-950 ring-1 ring-emerald-500 font-medium';
+                            badgeStyle = 'bg-emerald-600 text-white border-emerald-600';
+                            statusIcon = `<svg class="w-5 h-5 text-emerald-600 shrink-0 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>`;
+                        } else if (isSelected && !isCorrect) {
+                            // Tô màu đỏ cho đáp án chọn sai
+                            btnStyle = 'border-rose-500 bg-rose-50/90 text-rose-950 ring-1 ring-rose-500';
+                            badgeStyle = 'bg-rose-600 text-white border-rose-600';
+                            statusIcon = `<svg class="w-5 h-5 text-rose-600 shrink-0 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+                        } else {
+                            btnStyle = 'border-slate-200 bg-slate-50/50 text-slate-400 opacity-75';
+                        }
+                    } else if (isSelected) {
+                        // Đang chọn trong chế độ Làm bài thi
+                        btnStyle = 'border-brand-600 bg-brand-50/80 text-brand-950 ring-1 ring-brand-600 font-medium';
+                        badgeStyle = 'bg-brand-600 text-white border-brand-600';
+                    }
+
+                    // Khóa không cho chọn lại nếu đã nộp bài hoặc đã chọn trong chế độ luyện tập tức thì
+                    const isDisabled = isSubmitted || (currentMode === 'practice' && selectedOpt !== undefined);
+
+                    optionsHTML += `
+                        <button type="button" 
+                            onclick="selectOption(${item.id}, '${key}')"
+                            ${isDisabled ? 'disabled' : ''}
+                            class="w-full text-left p-3.5 sm:p-4 rounded-xl border transition-all duration-150 flex items-center gap-3.5 ${btnStyle} ${isDisabled ? 'cursor-default' : 'cursor-pointer active:scale-[0.99]'}">
+                            <span class="w-8 h-8 rounded-lg border flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${badgeStyle}">
+                                ${key}
+                            </span>
+                            <span class="text-sm sm:text-base leading-snug">${item.options[key]}</span>
+                            ${statusIcon}
+                        </button>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-brand-50 text-brand-700 border border-brand-100">
+                            Câu ${item.id}
+                        </span>
+                        ${statusBadge}
+                    </div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900 mb-4 leading-relaxed">
+                        ${item.question}
+                    </h2>
+                    <div class="grid grid-cols-1 gap-2.5">
+                        ${optionsHTML}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        /**
+         * Render bảng điều hướng nhanh 30 câu hỏi ở cột bên
+         */
+        function renderNavGrid() {
+            const navGrid = document.getElementById('nav-grid');
+            navGrid.innerHTML = '';
+
+            quizData.forEach((item) => {
+                const selectedOpt = userAnswers[item.id];
+                const showFeedback = isSubmitted || (currentMode === 'practice' && selectedOpt !== undefined);
+
+                let btnClass = 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200';
+
+                if (showFeedback) {
+                    if (selectedOpt === item.answer) {
+                        btnClass = 'bg-emerald-500 text-white border-emerald-600 hover:bg-emerald-600';
+                    } else if (selectedOpt) {
+                        btnClass = 'bg-rose-500 text-white border-rose-600 hover:bg-rose-600';
+                    } else {
+                        btnClass = 'bg-amber-100 text-amber-800 border-amber-300';
+                    }
+                } else if (selectedOpt !== undefined) {
+                    btnClass = 'bg-brand-600 text-white border-brand-700 hover:bg-brand-700 shadow-xs';
+                }
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = item.id;
+                btn.title = `Đi tới Câu ${item.id}`;
+                btn.className = `h-9 rounded-lg border text-xs font-bold transition-all duration-150 flex items-center justify-center ${btnClass}`;
+                btn.onclick = () => scrollToQuestion(item.id);
+
+                navGrid.appendChild(btn);
+            });
+        }
+
+        /**
+         * Xử lý khi người dùng chọn một đáp án
+         */
+        function selectOption(questionId, optionKey) {
+            if (isSubmitted) return;
+            if (currentMode === 'practice' && userAnswers[questionId] !== undefined) return;
+
+            userAnswers[questionId] = optionKey;
+
+            // Cập nhật lại giao diện câu hỏi, thanh điều hướng và thanh tiến độ
+            renderQuestions();
+            renderNavGrid();
+            updateProgress();
+        }
+
+        /**
+         * Cập nhật thanh tiến độ (Progress bar)
+         */
+        function updateProgress() {
+            const answeredCount = Object.keys(userAnswers).length;
+            const total = quizData.length;
+            const percentage = Math.round((answeredCount / total) * 100);
+
+            document.getElementById('progress-text').textContent = `${answeredCount} / ${total} câu`;
+            document.getElementById('progress-percent').textContent = `${percentage}%`;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+        }
+
+        /**
+         * Chuyển đổi giữa chế độ 'Làm bài thi' và 'Luyện tập tức thì'
+         */
+        function setMode(mode) {
+            if (currentMode === mode) return;
+            currentMode = mode;
+
+            const btnExam = document.getElementById('mode-exam');
+            const btnPractice = document.getElementById('mode-practice');
+            const modeIndicator = document.getElementById('mode-indicator');
+
+            if (mode === 'exam') {
+                btnExam.className = 'px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 bg-white text-brand-700 shadow-sm';
+                btnPractice.className = 'px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900';
+                modeIndicator.textContent = 'Chế độ: Thi';
+                showToast('Đã chuyển sang chế độ Làm bài thi (Nộp bài mới chấm điểm)');
+            } else {
+                btnPractice.className = 'px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 bg-white text-brand-700 shadow-sm';
+                btnExam.className = 'px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 text-slate-600 hover:text-slate-900';
+                modeIndicator.textContent = 'Chế độ: Luyện tập';
+                showToast('Đã chuyển sang chế độ Luyện tập tức thì (Chọn câu nào hiện đáp án ngay)');
+            }
+
+            renderQuestions();
+            renderNavGrid();
+        }
+
+        /**
+         * Cuộn mượt tới câu hỏi được chọn trên bảng điều hướng
+         */
+        function scrollToQuestion(id) {
+            const element = document.getElementById(`question-card-${id}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        /**
+         * Xử lý khi bấm nút Chấm điểm / Nộp bài
+         */
+        function handleSubmitClick() {
+            if (isSubmitted) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            const answeredCount = Object.keys(userAnswers).length;
+            const total = quizData.length;
+
+            if (answeredCount < total) {
+                const remaining = total - answeredCount;
+                document.getElementById('modal-message').textContent = 
+                    `Bạn mới hoàn thành ${answeredCount}/${total} câu (còn ${remaining} câu chưa chọn). Bạn có chắc chắn muốn nộp bài và chấm điểm ngay bây giờ không?`;
+                document.getElementById('custom-modal').classList.remove('hidden');
+            } else {
+                gradeQuiz();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+        }
+
+        function confirmSubmit() {
+            closeModal();
+            gradeQuiz();
+        }
+
+        /**
+         * Thực hiện chấm điểm và hiển thị kết quả
+         */
+        function gradeQuiz() {
+            isSubmitted = true;
+
+            let correctCount = 0;
+            quizData.forEach((item) => {
+                if (userAnswers[item.id] === item.answer) {
+                    correctCount++;
+                }
+            });
+
+            const total = quizData.length;
+            const scoreTen = ((correctCount / total) * 10).toFixed(2);
+
+            // Cập nhật thông tin lên bảng kết quả
+            document.getElementById('score-ten').textContent = scoreTen;
+            document.getElementById('score-count').textContent = `${correctCount} / ${total}`;
+
+            const badge = document.getElementById('result-grade-badge');
+            const feedback = document.getElementById('result-feedback');
+
+            if (scoreTen >= 8.5) {
+                badge.textContent = 'Xuất sắc';
+                feedback.textContent = 'Chúc mừng! Bạn nắm rất vững kiến thức về GIS và WebGIS.';
+            } else if (scoreTen >= 7.0) {
+                badge.textContent = 'Khá giỏi';
+                feedback.textContent = 'Kết quả rất tốt! Hãy rà soát lại một vài câu sai để đạt điểm tối đa nhé.';
+            } else if (scoreTen >= 5.0) {
+                badge.textContent = 'Đạt yêu cầu';
+                feedback.textContent = 'Bạn đã vượt qua mức trung bình. Hãy xem lại các đáp án tô màu xanh lá bên dưới để củng cố kiến thức.';
+            } else {
+                badge.textContent = 'Cần ôn tập thêm';
+                feedback.textContent = 'Đừng nản lòng! Hãy xem kỹ đáp án đúng (màu xanh lá) của từng câu và bấm "Làm lại bài" để luyện tập nhé.';
+            }
+
+            // Hiển thị bảng kết quả và cập nhật nút nộp bài
+            document.getElementById('result-banner').classList.remove('hidden');
+            const submitBtn = document.getElementById('btn-submit');
+            submitBtn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>Đã chấm điểm (${scoreTen} điểm)</span>
+            `;
+            submitBtn.classList.remove('from-brand-600', 'to-brand-700');
+            submitBtn.classList.add('from-emerald-600', 'to-emerald-700');
+
+            // Render lại toàn bộ câu hỏi và bảng điều hướng để tô màu xanh/đỏ
+            renderQuestions();
+            renderNavGrid();
+
+            // Cuộn lên đầu trang để xem điểm
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /**
+         * Làm lại bài thi từ đầu (Reset toàn bộ trạng thái)
+         */
+        function resetQuiz() {
+            userAnswers = {};
+            isSubmitted = false;
+
+            document.getElementById('result-banner').classList.add('hidden');
+            
+            const submitBtn = document.getElementById('btn-submit');
+            submitBtn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>Chấm điểm / Nộp bài</span>
+            `;
+            submitBtn.classList.remove('from-emerald-600', 'to-emerald-700');
+            submitBtn.classList.add('from-brand-600', 'to-brand-700');
+
+            renderQuestions();
+            renderNavGrid();
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast('Đã làm mới bài thi!');
+        }
+
+        /**
+         * Tải toàn bộ mã nguồn trang web thành file .html về máy người dùng
+         */
+        function downloadHTML() {
+            try {
+                // Lấy toàn bộ mã HTML hiện tại của tài liệu
+                const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+                const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Trac_Nghiem_GIS_WebGIS_Nhom1.html';
+                document.body.appendChild(a);
+                a.click();
+                
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('Đang tải file Trac_Nghiem_GIS_WebGIS_Nhom1.html về máy...');
+            } catch (error) {
+                console.error('Lỗi khi tải file HTML:', error);
+                showToast('Không thể tải file tự động trên trình duyệt này.');
+            }
+        }
+
+        /**
+         * Hiển thị thông báo Toast góc dưới màn hình
+         */
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
